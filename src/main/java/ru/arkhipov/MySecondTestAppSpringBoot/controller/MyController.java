@@ -2,17 +2,16 @@ package ru.arkhipov.MySecondTestAppSpringBoot.controller;
 
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
+import ru.arkhipov.MySecondTestAppSpringBoot.exception.UnsupportedCodeException;
 import ru.arkhipov.MySecondTestAppSpringBoot.exception.ValidationFailedException;
 import ru.arkhipov.MySecondTestAppSpringBoot.model.Request;
 import ru.arkhipov.MySecondTestAppSpringBoot.model.Response;
-import ru.arkhipov.MySecondTestAppSpringBoot.service.RequestValidationService;
 import ru.arkhipov.MySecondTestAppSpringBoot.service.ValidationService;
 
 import java.text.SimpleDateFormat;
@@ -44,6 +43,11 @@ public class MyController {
             response.setCode("failed");
             response.setErrorCode("ValidationException");
             response.setErrorMessage("Ошибка валидации");
+            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+        } catch (UnsupportedCodeException e) {
+            response.setCode("failed");
+            response.setErrorCode("UnsupportedCodeException");
+            response.setErrorMessage("Уникальный идентификатор не может быть равен 123");
             return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
         } catch (Exception e) {
             response.setCode("failed");
