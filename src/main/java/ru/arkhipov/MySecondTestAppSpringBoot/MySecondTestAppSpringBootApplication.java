@@ -9,7 +9,9 @@ import org.springframework.context.annotation.ComponentScan;
 public class MySecondTestAppSpringBootApplication {
 
 	static void main(String[] args) {
-		SpringApplication.run(MySecondTestAppSpringBootApplication.class, args);
+
+        SpringApplication.run(MySecondTestAppSpringBootApplication.class, args);
+
 	}
 
 }
