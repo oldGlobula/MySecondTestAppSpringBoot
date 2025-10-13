@@ -27,6 +27,7 @@ public class MyController {
 
     private final ModifyResponseService modifyResponseService;
 
+
     @Autowired
     public MyController(ValidationService validationService,
                         @Qualifier("ModifySystemTimeResponseService") ModifyResponseService modifyResponseService) {
@@ -49,30 +50,31 @@ public class MyController {
                 .build();
         log.info("response: {}", response);
 
+        var httpStatus = HttpStatus.OK;
+
         try {
             validationService.isValid(bindingResult);
-        } catch (ValidationFailedException e) {
-            response.setCode(Codes.FAILED);
-            response.setErrorCode(ErrorCodes.VALIDATION_EXCEPTION);
-            response.setErrorMessage(ErrorMessages.VALIDATION);
-            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
-        } catch (UnsupportedCodeException e) {
-            response.setCode(Codes.FAILED);
-            response.setErrorCode(ErrorCodes.UNSUPPORTED_EXCEPTION);
-            response.setErrorMessage(ErrorMessages.UNSUPPORTED);
-            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
         } catch (Exception e) {
             response.setCode(Codes.FAILED);
-            response.setErrorCode(ErrorCodes.UNKNOWN_EXCEPTION);
-            response.setErrorMessage(ErrorMessages.UNKNOWN);
-            // We don't know where it could be thrown so we can only log it in the catch sequence
-            log.error("Error: code='{}', message='{}'", e, e.getMessage());
-            return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+            if (e instanceof ValidationFailedException) {
+                response.setErrorCode(ErrorCodes.VALIDATION_EXCEPTION);
+                response.setErrorMessage(ErrorMessages.VALIDATION);
+                httpStatus = HttpStatus.BAD_REQUEST;
+            } else if (e instanceof UnsupportedCodeException) {
+                response.setErrorCode(ErrorCodes.UNSUPPORTED_EXCEPTION);
+                response.setErrorMessage(ErrorMessages.UNSUPPORTED);
+                httpStatus = HttpStatus.BAD_REQUEST;
+            } else {
+                response.setErrorCode(ErrorCodes.UNKNOWN_EXCEPTION);
+                response.setErrorMessage(ErrorMessages.UNKNOWN);
+                httpStatus = HttpStatus.INTERNAL_SERVER_ERROR;
+            }
         }
 
         modifyResponseService.modify(response);
+
         log.info("response: {}", response);
 
-        return new ResponseEntity<>(response, HttpStatus.OK);
+        return new ResponseEntity<>(response, httpStatus);
     }
 }
