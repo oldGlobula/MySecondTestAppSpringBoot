@@ -54,21 +54,15 @@ public class MyController {
 
         try {
             validationService.isValid(bindingResult);
+        } catch (ValidationFailedException e) {
+            changeResponseDebugInfo(response, ErrorCodes.VALIDATION_EXCEPTION, ErrorMessages.VALIDATION);
+            httpStatus = HttpStatus.BAD_REQUEST;
+        } catch (UnsupportedCodeException e) {
+            changeResponseDebugInfo(response, ErrorCodes.UNSUPPORTED_EXCEPTION, ErrorMessages.UNSUPPORTED);
+            httpStatus = HttpStatus.BAD_REQUEST;
         } catch (Exception e) {
-            response.setCode(Codes.FAILED);
-            if (e instanceof ValidationFailedException) {
-                response.setErrorCode(ErrorCodes.VALIDATION_EXCEPTION);
-                response.setErrorMessage(ErrorMessages.VALIDATION);
-                httpStatus = HttpStatus.BAD_REQUEST;
-            } else if (e instanceof UnsupportedCodeException) {
-                response.setErrorCode(ErrorCodes.UNSUPPORTED_EXCEPTION);
-                response.setErrorMessage(ErrorMessages.UNSUPPORTED);
-                httpStatus = HttpStatus.BAD_REQUEST;
-            } else {
-                response.setErrorCode(ErrorCodes.UNKNOWN_EXCEPTION);
-                response.setErrorMessage(ErrorMessages.UNKNOWN);
-                httpStatus = HttpStatus.INTERNAL_SERVER_ERROR;
-            }
+            changeResponseDebugInfo(response, ErrorCodes.UNKNOWN_EXCEPTION, ErrorMessages.UNKNOWN);
+            httpStatus = HttpStatus.INTERNAL_SERVER_ERROR;
         }
 
         modifyResponseService.modify(response);
@@ -76,5 +70,12 @@ public class MyController {
         log.info("response: {}", response);
 
         return new ResponseEntity<>(response, httpStatus);
+    }
+
+    private void changeResponseDebugInfo(Response response, ErrorCodes code, ErrorMessages message) {
+        if (code != ErrorCodes.EMPTY)
+            response.setCode(Codes.FAILED);
+        response.setErrorCode(code);
+        response.setErrorMessage(message);
     }
 }
